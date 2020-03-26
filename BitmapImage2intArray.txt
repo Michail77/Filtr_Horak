@@ -1,0 +1,119 @@
+        BitmapImage src;
+        int width, height;
+        int[,] array2D;
+
+        public MainWindow()
+        {
+            InitializeComponent();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.DefaultExt = ".jpg";
+            dlg.Filter = "Obrázek (.jpg)|*.jpg|Všechny soubory|*.*";
+            Nullable<bool> result = dlg.ShowDialog();
+            if (result == true)
+            {
+                string filename = dlg.FileName;
+                src = new BitmapImage();
+                src.BeginInit();
+                src.UriSource = new Uri(filename,UriKind.Relative);
+                src.CacheOption = BitmapCacheOption.OnLoad;
+                src.EndInit();
+
+                imgCanvas.Source = src;
+            }
+        }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            if (src != null) imgCanvas.Source = src;
+        }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            width = src.PixelWidth;
+            height = src.PixelHeight;
+
+            BitmapImageToArray2D();
+
+            for(int x = 0; x < height; x++)
+                for (int y = 0; y < width; y++) array2D[x, y] = array2D[x, y] & 0xFF0000;
+
+            imgCanvas.Source = Array2DToBitmapImage();
+        }
+
+        public void BitmapImageToArray2D()
+        {
+            array2D = new int[src.PixelHeight, src.PixelWidth];
+
+            WriteableBitmap wb = new WriteableBitmap(src);
+            int width = wb.PixelWidth;
+            int height = wb.PixelHeight;
+            int bytesPerPixel = (wb.Format.BitsPerPixel + 7) / 8;
+            int stride = wb.BackBufferStride;
+            wb.Lock();
+            unsafe
+            {
+                byte* pImgData = (byte*)wb.BackBuffer;
+                int cRowStart = 0;
+                int cColStart = 0;
+                for (int row = 0; row < height; row++)
+                {
+                    cColStart = cRowStart;
+                    for (int col = 0; col < width; col++)
+                    {
+                        byte* bPixel = pImgData + cColStart;
+                        //bPixel[0] // Blue
+                        //bPixel[1] // Green
+                        //bPixel[2] // Red
+                        int pixel = bPixel[2]; //Red
+                        pixel = (pixel << 8) + bPixel[1]; //Green
+                        pixel = (pixel << 8) + bPixel[0]; //Blue
+                        array2D[row, col] = pixel;
+
+                        cColStart += bytesPerPixel;
+                    }
+                    cRowStart += stride;
+                }
+            }
+            wb.Unlock();
+            wb.Freeze();
+        }
+
+        public WriteableBitmap Array2DToBitmapImage()
+        {
+
+            WriteableBitmap wb = new WriteableBitmap(src);
+            int width = wb.PixelWidth;
+            int height = wb.PixelHeight;
+            int bytesPerPixel = (wb.Format.BitsPerPixel + 7) / 8;
+            int stride = wb.BackBufferStride;
+            wb.Lock();
+            unsafe
+            {
+                byte* pImgData = (byte*)wb.BackBuffer;
+                int cRowStart = 0;
+                int cColStart = 0;
+                for (int row = 0; row < height; row++)
+                {
+                    cColStart = cRowStart;
+                    for (int col = 0; col < width; col++)
+                    {
+                        byte* bPixel = pImgData + cColStart;
+
+                        bPixel[0] = (byte)((array2D[row, col] & 0xFF));// Blue
+                        bPixel[1] = (byte)((array2D[row, col] & 0xFF00) >> 8);// Green
+                        bPixel[2] = (byte)((array2D[row, col] & 0xFF0000) >> 16);// Red
+
+                        cColStart += bytesPerPixel;
+                    }
+                    cRowStart += stride;
+                }
+            }
+            wb.Unlock();
+            wb.Freeze();
+
+            return wb;
+        }

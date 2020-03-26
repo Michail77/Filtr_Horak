@@ -1,0 +1,6 @@
+1) Upravte aplikaci tak, aby pøevod na odstíny zelené probìhl v samostatném vláknì
+2) Totéž, ale rozdìlte pøevod na více vláken dle poètu jader procesoru
+3) Zjistìte èas pro jednovláknové a vícevláknové provedení (staèí do konzole)
+4) Pøidejte (nahraïte stávají) pøevodem na odstíny šedé (vypoèítáme prùmìr z RGB a rozkopírujeme do všech složek)
+5) Pøidejte redukci barevné hloubky na polovinu, ètvrtinu, osminu (postupnì nulujeme bity od nejménì významných v jednotlivých složkách)
+6) Rozostøení kostièkováním (vypoèítáme prùmìrný odstín sousedních 4 pixelù a tyto pixely nahradíme prùmìrem) - umožnìte postupnì zvìtšovat velikost kostièek.
